@@ -72,6 +72,13 @@
 						sortable
 					;
 
+                    if (options.ngRepeatWrapper) {
+                        var ngRepeatWrapper = el.querySelector(options.ngRepeatWrapper);
+                        if (ngRepeatWrapper) {
+                            el = ngRepeatWrapper;
+                            source = getSource(ngRepeatWrapper);
+                        }
+                    }
 
 					function _emitEvent(/**Event*/evt, /*Mixed*/item) {
 						var name = 'on' + evt.type.charAt(0).toUpperCase() + evt.type.substr(1);
