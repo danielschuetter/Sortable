@@ -249,9 +249,6 @@
 				return;
 			}
 
-			//Make sure nesting works
-			evt.stopPropagation();
-
 			// get the index of the dragged element within its parent
 			oldIndex = _index(target);
 
