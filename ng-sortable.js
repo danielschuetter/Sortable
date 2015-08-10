@@ -101,6 +101,9 @@
 							return;
 						}
 
+						//Make sure nesting works
+						evt.stopPropagation();
+
 						var oldIndex = evt.oldIndex,
 							newIndex = evt.newIndex,
 							items = source.items();
