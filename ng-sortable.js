@@ -31,35 +31,34 @@
 			var removed,
 				nextSibling;
 
-			function getSource(el) {
-				var scope = angular.element(el).scope();
-				var ngRepeat = [].filter.call(el.childNodes, function (node) {
-					return (
-							(node.nodeType === 8) &&
-							(node.nodeValue.indexOf('ngRepeat:') !== -1)
-						);
-				})[0];
+            function getSource(el, scope) {
+                var ngRepeat = [].filter.call(el.childNodes, function (node) {
+                    return (
+                        (node.nodeType === 8) &&
+                        (node.nodeValue.indexOf('ngRepeat:') !== -1)
+                    );
+                })[0];
 
-				if (!ngRepeat) {
-					// Without ng-repeat
-					return null;
-				}
+                if (!ngRepeat) {
+                    // Without ng-repeat
+                    return null;
+                }
 
-				// tests: http://jsbin.com/kosubutilo/1/edit?js,output
-				ngRepeat = ngRepeat.nodeValue.match(/ngRepeat:\s*(?:\(.*?,\s*)?([^\s)]+)[\s)]+in\s+([^\s|]+)/);
+                // tests: http://jsbin.com/kosubutilo/1/edit?js,output
+                ngRepeat = ngRepeat.nodeValue.match(/ngRepeat:\s*(?:\(.*?,\s*)?([^\s)]+)[\s)]+in\s+([^\s|]+)/);
 
-				var itemExpr = $parse(ngRepeat[1]);
-				var itemsExpr = $parse(ngRepeat[2]);
+                var itemExpr = $parse(ngRepeat[1]);
+                var itemsExpr = $parse(ngRepeat[2]);
 
-				return {
-					item: function (el) {
-						return itemExpr(angular.element(el).scope());
-					},
-					items: function () {
-						return itemsExpr(scope);
-					}
-				};
-			}
+                return {
+                    item: function () {
+                        return itemExpr(scope) || itemExpr(scope.$parent);
+                    },
+                    items: function () {
+                        return itemsExpr(scope) || itemsExpr(scope.$parent);
+                    }
+                };
+            }
 
 
 			// Export
@@ -67,27 +66,27 @@
 				restrict: 'AC',
 				scope: { ngSortable: "=?" },
 				link: function (scope, $el, attrs) {
-					var el = $el[0],
-						options = angular.extend(scope.ngSortable || {}, ngSortableConfig),
-						source = getSource(el),
-						watchers = [],
-						sortable
-					;
+                    var el = $el[0],
+                        options = angular.extend(scope.ngSortable || {}, ngSortableConfig),
+                        source,
+                        watchers = [],
+                        sortable;
 
                     if (options.ngRepeatWrapper) {
                         var ngRepeatWrapper = el.querySelector(options.ngRepeatWrapper);
                         if (ngRepeatWrapper) {
                             el = ngRepeatWrapper;
-                            source = getSource(ngRepeatWrapper);
                         }
                     }
+
+                    source = getSource(el, scope);
 
 					function _emitEvent(/**Event*/evt, /*Mixed*/item) {
 						var name = 'on' + evt.type.charAt(0).toUpperCase() + evt.type.substr(1);
 
 						/* jshint expr:true */
 						options[name] && options[name]({
-							model: item || source && source.item(evt.item),
+							model: item || source && source.item(),
 							models: source && source.items(),
 							oldIndex: evt.oldIndex,
 							newIndex: evt.newIndex
@@ -112,7 +111,7 @@
 							var prevSource = getSource(evt.from),
 								prevItems = prevSource.items();
 
-							oldIndex = prevItems.indexOf(prevSource.item(evt.item));
+							oldIndex = prevItems.indexOf(prevSource.item());
 							removed = prevItems[oldIndex];
 
 							if (evt.clone) {
